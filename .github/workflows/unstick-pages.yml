@@ -1,0 +1,31 @@
+name: Clear a stuck Pages deployment
+
+# Run by hand (or on push of this file) when a publish reports
+# "in progress deployment ... cancel <sha> first".
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit of the stuck deployment"
+        required: true
+  push:
+    branches: [main]
+    paths: [".github/workflows/unstick-pages.yml"]
+
+permissions:
+  pages: write
+  actions: write
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel the stuck deployment and republish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ inputs.sha || 'be039a9a7a1fafc5add873176d35dfdb3960cd4e' }}
+        run: |
+          gh api "repos/${{ github.repository }}/pages/deployments/$SHA" || true
+          gh api -X POST "repos/${{ github.repository }}/pages/deployments/$SHA/cancel" && echo "cancelled $SHA" || echo "cancel call failed"
+          sleep 20
+          gh workflow run build.yml --ref main --repo "${{ github.repository }}"

@@ -68,4 +68,4 @@ jobs:
         if: steps.build.outcome == 'success' && steps.keep.outputs.publish == 'true'
         uses: actions/deploy-pages@v4
         with:
-          timeout: 1800000   # the video makes the upload large; give Pages 30 minutes
+          timeout: 600000
