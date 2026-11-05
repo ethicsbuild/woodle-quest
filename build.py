@@ -184,6 +184,23 @@ def clean(body_html, known_slugs):
                 keep["class"] = "footnote-anchor"
             a.attrs = keep
 
+    # Bare web addresses in the text become links.
+    url_re = re.compile(r"https?://[^\s<>()]+[^\s<>().,;:!?'\"]")
+    for node in list(soup.find_all(string=url_re)):
+        if node.find_parent("a"):
+            continue
+        parts, last = [], 0
+        for m in url_re.finditer(node):
+            parts.append(node[last:m.start()])
+            link = soup.new_tag("a", href=strip_tracking(m.group(0)), rel="noopener")
+            link.string = m.group(0)
+            parts.append(link)
+            last = m.end()
+        parts.append(node[last:])
+        for part in parts:
+            node.insert_before(part)
+        node.extract()
+
     # Drop Substack's attributes everywhere else.
     for el in soup.find_all(True):
         if el.name in ("img", "a"):
@@ -326,11 +343,14 @@ def main():
     try:
         feed_items = parse_feed(read_feed(source))
     except Exception as e:
+        # Substack refuses some servers. Copies of the feed saved by hand go in seed/.
         print(f"FEED UNREACHABLE: {e}")
         feed_items = []
-        if not any(POSTS.glob("*.json")):
+        for f in sorted((ROOT / "seed").glob("*.xml")):
+            feed_items += parse_feed(f.read_text(encoding="utf-8"))
+            print(f"Using saved copy: {f.name}")
+        if not feed_items and not any(POSTS.glob("*.json")):
             raise SystemExit("No saved pieces and no feed. Nothing to publish.")
-        print("Publishing the saved pieces as they are.")
     saved = {f.stem: json.loads(f.read_text()) for f in POSTS.glob("*.json")}
     known = set(saved) | {i["slug"] for i in feed_items}
 

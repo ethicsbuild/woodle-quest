@@ -79,3 +79,4 @@ a { color: var(--accent); text-underline-offset: 0.15em; text-decoration-thickne
 .body .footnote-anchor { vertical-align: super; font-size: 0.65em; text-decoration: none; padding: 0 0.1em; }
 .body .footnote { display: flex; gap: 0.6rem; }
 .body .footnote p { margin: 0 0 0.5rem; }
+.body a { overflow-wrap: anywhere; }
