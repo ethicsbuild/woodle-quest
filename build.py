@@ -445,6 +445,14 @@ def main():
         older = posts[i + 1] if i + 1 < len(posts) else None
         newer = posts[i - 1] if i > 0 else None
         (d / "index.html").write_text(render_post(p, older, newer))
+    # Fingerprint of everything published, so the hourly run can tell whether
+    # the live site matches what should be live.
+    digest = hashlib.sha256()
+    for f in sorted(OUT.rglob("*")):
+        if f.is_file():
+            digest.update(str(f.relative_to(OUT)).encode())
+            digest.update(f.read_bytes())
+    (OUT / "build-id.txt").write_text(digest.hexdigest() + "\n")
     print(f"Built {len(posts)} pieces into {OUT}")
 
 

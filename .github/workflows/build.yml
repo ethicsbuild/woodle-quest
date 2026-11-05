@@ -52,7 +52,12 @@ jobs:
             git push
             changed=true
           fi
-          # The hourly run only republishes when something actually changed.
+          # The hourly run republishes only when the live site differs from this
+          # build (a new piece, or an earlier publish that never landed).
+          live=$(curl -fsS "https://words.woodle.quest/build-id.txt?$(date +%s)" 2>/dev/null || echo none)
+          want=$(cat site/build-id.txt 2>/dev/null || echo missing)
+          echo "live=$live want=$want"
+          if [ "$live" != "$want" ]; then changed=true; fi
           if [ "$changed" = true ] || [ "${{ github.event_name }}" != "schedule" ]; then
             echo "publish=true" >> "$GITHUB_OUTPUT"
           else
