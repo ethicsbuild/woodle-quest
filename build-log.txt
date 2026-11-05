@@ -1,12 +1,3 @@
 FEED UNREACHABLE: HTTP Error 403: Forbidden
 Using saved copy: feed.xml
-  updated: The Janky Cart
-  updated: What They Are Afraid Of
-  updated: What a Dead Kid Buys You
-  updated: A Drone With Hands
-  updated: Confidently Wrong About a Toilet
-  updated: The Cold Mirror
-  updated: The Man Now
-  updated: The Scarlet Letter
-  updated: Hands on the Wheel
 Built 9 pieces into /home/runner/work/woodle-quest/woodle-quest/site
