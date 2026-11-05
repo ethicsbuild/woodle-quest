@@ -39,6 +39,7 @@ TAGLINE = "Writing by Gage Cass Woodle. No account, no app, no feed. Just the wo
 ROOT = Path(__file__).resolve().parent
 POSTS = ROOT / "posts"
 IMAGES = ROOT / "images"
+MEDIA = ROOT / "media"
 STATIC = ROOT / "static"
 OUT = ROOT / "site"
 
@@ -127,12 +128,25 @@ def clean(body_html, known_slugs):
         for el in soup.select(sel):
             el.decompose()
 
-    # Native videos cannot be carried over; say so plainly.
+    # Native videos: play our own copy from media/<upload id>.mp4 when we have
+    # one; otherwise say plainly that the video lives on Substack.
     for el in soup.select(".native-video-embed, [data-component-name=VideoPlaceholder]"):
-        note = soup.new_tag("p")
-        note["class"] = "note"
-        note.string = VIDEO_NOTE
-        el.replace_with(note)
+        try:
+            upload_id = json.loads(el.get("data-attrs", "{}")).get("mediaUploadId", "")
+        except ValueError:
+            upload_id = ""
+        if upload_id and (MEDIA / f"{upload_id}.mp4").exists():
+            video = soup.new_tag("video", controls="", preload="none", playsinline="")
+            video["src"] = f"/media/{upload_id}.mp4"
+            if (MEDIA / f"{upload_id}.jpg").exists():
+                video["poster"] = f"/media/{upload_id}.jpg"
+            video.string = "Your browser cannot play this video."
+            el.replace_with(video)
+        else:
+            note = soup.new_tag("p")
+            note["class"] = "note"
+            note.string = VIDEO_NOTE
+            el.replace_with(note)
 
     # Images: unwrap the lightbox link, flatten <picture>, keep one local copy.
     for a in soup.select("a.image-link"):
@@ -205,7 +219,7 @@ def clean(body_html, known_slugs):
 
     # Drop Substack's attributes everywhere else.
     for el in soup.find_all(True):
-        if el.name in ("img", "a"):
+        if el.name in ("img", "a", "video"):
             continue
         keep = {}
         if el.get("id"):
@@ -384,6 +398,8 @@ def main():
         shutil.copy(f, OUT / f.name)
     if IMAGES.exists():
         shutil.copytree(IMAGES, OUT / "images")
+    if MEDIA.exists():
+        shutil.copytree(MEDIA, OUT / "media")
     (OUT / "CNAME").write_text(DOMAIN + "\n")
     (OUT / "index.html").write_text(render_index(posts))
     for i, p in enumerate(posts):

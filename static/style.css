@@ -85,3 +85,4 @@ a { color: var(--accent); text-underline-offset: 0.15em; text-decoration-thickne
 .start .t { display: block; font-size: 1.45rem; font-weight: 600; line-height: 1.2; }
 .start .s { display: block; color: var(--muted); margin-top: 0.35rem; line-height: 1.4; }
 .start:hover .t { color: var(--accent); }
+.body video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 4px; margin: 2rem 0; }
