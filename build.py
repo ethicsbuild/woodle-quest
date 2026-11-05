@@ -42,7 +42,7 @@ OUT = ROOT / "site"
 
 NS = {"content": "http://purl.org/rss/1.0/modules/content/",
       "dc": "http://purl.org/dc/elements/1.1/"}
-UA = "OnPurposeReadingRoom/1.0 (+https://words.woodle.quest)"
+UA = "Mozilla/5.0 (compatible; OnPurposeReadingRoom/1.0; +https://words.woodle.quest)"
 
 VIDEO_NOTE = "A video goes with this piece. For now it plays only on Substack."
 
@@ -50,7 +50,8 @@ VIDEO_NOTE = "A video goes with this piece. For now it plays only on Substack."
 # ---------- fetching ----------
 
 def fetch(url, binary=False):
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
+    accept = "image/avif,image/webp,image/*,*/*" if binary else "application/rss+xml, application/xml;q=0.9, */*;q=0.8"
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": accept})
     with urllib.request.urlopen(req, timeout=60) as r:
         data = r.read()
         return (data, r.headers.get("Content-Type", "")) if binary else data.decode("utf-8")
@@ -322,7 +323,14 @@ def main():
     source = sys.argv[1] if len(sys.argv) > 1 else None
     POSTS.mkdir(exist_ok=True)
 
-    feed_items = parse_feed(read_feed(source))
+    try:
+        feed_items = parse_feed(read_feed(source))
+    except Exception as e:
+        print(f"FEED UNREACHABLE: {e}")
+        feed_items = []
+        if not any(POSTS.glob("*.json")):
+            raise SystemExit("No saved pieces and no feed. Nothing to publish.")
+        print("Publishing the saved pieces as they are.")
     saved = {f.stem: json.loads(f.read_text()) for f in POSTS.glob("*.json")}
     known = set(saved) | {i["slug"] for i in feed_items}
 
