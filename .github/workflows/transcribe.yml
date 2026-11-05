@@ -28,7 +28,7 @@ jobs:
         id: tx
         run: |
           set -o pipefail
-          { pip install -q faster-whisper && python transcribe.py; } 2>&1 | tee transcribe-log.txt
+          { pip install -q faster-whisper imageio-ffmpeg && python transcribe.py; } 2>&1 | tee transcribe-log.txt
 
       - name: Save transcripts and rebuild the site
         if: always()

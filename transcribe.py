@@ -8,6 +8,7 @@ For each media/<id>.mp4 without a transcript, writes:
 import subprocess
 from pathlib import Path
 
+import imageio_ffmpeg
 import numpy as np
 
 from faster_whisper import WhisperModel
@@ -33,7 +34,7 @@ def main():
         print(f"Transcribing {video.name}")
         # Decode with ffmpeg ourselves (16 kHz mono) rather than faster-whisper's
         # bundled decoder, which breaks when its PyAV dependency moves.
-        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-f", "f32le",
+        raw = subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-v", "error", "-i", str(video), "-f", "f32le",
                               "-ac", "1", "-ar", "16000", "-"], check=True,
                              capture_output=True).stdout
         audio = np.frombuffer(raw, dtype=np.float32)
