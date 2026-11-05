@@ -32,6 +32,8 @@ SUBSTACK_HOST = "gagecasswoodle.substack.com"
 DOMAIN = "words.woodle.quest"
 SITE_TITLE = "On Purpose"
 AUTHOR = "Gage Cass Woodle"
+# The piece every new reader should meet first. Change the slug to re-pin.
+START_HERE = "the-scarlet-letter"
 TAGLINE = "Writing by Gage Cass Woodle. No account, no app, no feed. Just the words."
 
 ROOT = Path(__file__).resolve().parent
@@ -283,8 +285,19 @@ def page(title, description, inner, canonical):
 
 
 def render_index(posts):
+    pinned = next((p for p in posts if p["slug"] == START_HERE), None)
+    start = ""
+    if pinned:
+        start = f"""  <a class="start" href="/{esc(pinned['slug'])}/">
+    <span class="label">Start here</span>
+    <span class="t">{esc(pinned['title'])}</span>
+    {f'<span class="s">{esc(pinned["subtitle"])}</span>' if pinned['subtitle'] else ''}
+  </a>
+"""
     rows = []
     for p in posts:
+        if p is pinned:
+            continue
         rows.append(f"""    <li>
       <a href="/{esc(p['slug'])}/">
         <span class="t">{esc(p['title'])}</span>
@@ -298,7 +311,7 @@ def render_index(posts):
     <h1>{SITE_TITLE}</h1>
     <p class="tagline">{esc(TAGLINE)}</p>
   </header>
-  <ol class="pieces">
+{start}  <ol class="pieces">
 {chr(10).join(rows)}
   </ol>
   <footer class="foot">

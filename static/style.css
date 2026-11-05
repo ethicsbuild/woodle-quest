@@ -80,3 +80,8 @@ a { color: var(--accent); text-underline-offset: 0.15em; text-decoration-thickne
 .body .footnote { display: flex; gap: 0.6rem; }
 .body .footnote p { margin: 0 0 0.5rem; }
 .body a { overflow-wrap: anywhere; }
+.start { display: block; text-decoration: none; color: inherit; border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 4px; padding: 1.1rem 1.25rem 1.2rem; margin: 0 0 2.5rem; }
+.start .label { display: block; font-family: var(--sans); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem; }
+.start .t { display: block; font-size: 1.45rem; font-weight: 600; line-height: 1.2; }
+.start .s { display: block; color: var(--muted); margin-top: 0.35rem; line-height: 1.4; }
+.start:hover .t { color: var(--accent); }
