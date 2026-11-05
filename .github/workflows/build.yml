@@ -30,15 +30,18 @@ jobs:
           python-version: "3.12"
 
       - name: Build from the feed
+        id: build
         run: |
-          pip install beautifulsoup4
-          python build.py
+          pip install -q beautifulsoup4
+          set -o pipefail
+          python build.py 2>&1 | tee build-log.txt
 
-      - name: Keep new pieces and images in the repo
+      - name: Keep new pieces, images and the build log in the repo
+        if: always()
         run: |
           git config user.name "reading-room-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add posts images
+          git add -A posts images build-log.txt 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No new pieces."
           else
@@ -46,9 +49,11 @@ jobs:
             git push
           fi
 
-      - uses: actions/upload-pages-artifact@v3
+      - if: steps.build.outcome == 'success'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
       - id: deploy
+        if: steps.build.outcome == 'success'
         uses: actions/deploy-pages@v4
