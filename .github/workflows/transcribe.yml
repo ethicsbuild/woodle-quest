@@ -1,0 +1,47 @@
+name: Transcribe videos
+
+# Runs whenever a video lands in media/. Writes media/<id>.vtt (captions)
+# and media/<id>.txt (readable transcript), then asks the site to rebuild.
+
+on:
+  push:
+    branches: [main]
+    paths: ["media/*.mp4", ".github/workflows/transcribe.yml", "transcribe.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Transcribe any video without a transcript
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pip install -q faster-whisper
+          python transcribe.py
+
+      - name: Save transcripts and rebuild the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "reading-room-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media
+          if git diff --cached --quiet; then
+            echo "Nothing new."
+          else
+            git commit -m "Transcripts for new videos"
+            git pull --rebase origin main
+            git push
+            gh workflow run build.yml --ref main
+          fi

@@ -140,8 +140,29 @@ def clean(body_html, known_slugs):
             video["src"] = f"/media/{upload_id}.mp4"
             if (MEDIA / f"{upload_id}.jpg").exists():
                 video["poster"] = f"/media/{upload_id}.jpg"
-            video.string = "Your browser cannot play this video."
+            if (MEDIA / f"{upload_id}.vtt").exists():
+                track = soup.new_tag("track", kind="captions", srclang="en", label="English")
+                track["src"] = f"/media/{upload_id}.vtt"
+                video.append(track)
+            video.append("Your browser cannot play this video.")
             el.replace_with(video)
+            transcript = MEDIA / f"{upload_id}.txt"
+            if transcript.exists():
+                details = soup.new_tag("details")
+                details["class"] = "transcript"
+                summary = soup.new_tag("summary")
+                summary.string = "Read the transcript"
+                details.append(summary)
+                label = soup.new_tag("p")
+                label["class"] = "note"
+                label.string = "Transcribed by machine from the video. Where a word matters, the video is the record."
+                details.append(label)
+                for para in transcript.read_text(encoding="utf-8").split("\n\n"):
+                    if para.strip():
+                        tp = soup.new_tag("p")
+                        tp.string = para.strip()
+                        details.append(tp)
+                video.insert_after(details)
         else:
             note = soup.new_tag("p")
             note["class"] = "note"
@@ -219,7 +240,7 @@ def clean(body_html, known_slugs):
 
     # Drop Substack's attributes everywhere else.
     for el in soup.find_all(True):
-        if el.name in ("img", "a", "video"):
+        if el.name in ("img", "a", "video", "track"):
             continue
         keep = {}
         if el.get("id"):
@@ -227,7 +248,7 @@ def clean(body_html, known_slugs):
         cls = el.get("class") or []
         if isinstance(cls, str):
             cls = cls.split()
-        classes = [c for c in cls if c in ("note", "footnote", "footnote-content")]
+        classes = [c for c in cls if c in ("note", "footnote", "footnote-content", "transcript")]
         if classes:
             keep["class"] = " ".join(classes)
         el.attrs = keep
