@@ -128,16 +128,19 @@ def clean(body_html, known_slugs):
         for el in soup.select(sel):
             el.decompose()
 
-    # Native videos: play our own copy from media/<upload id>.mp4 when we have
-    # one; otherwise say plainly that the video lives on Substack.
+    # Native videos. Our own copy lives in media/<upload id>/ as small HLS pieces
+    # (index.m3u8 plus segments), played by /hls.light.min.js where the browser
+    # needs it. With no copy, say plainly that the video lives on Substack.
+    # The transcript, when there is one, shows either way.
     for el in soup.select(".native-video-embed, [data-component-name=VideoPlaceholder]"):
         try:
             upload_id = json.loads(el.get("data-attrs", "{}")).get("mediaUploadId", "")
         except ValueError:
             upload_id = ""
-        if upload_id and (MEDIA / f"{upload_id}.mp4").exists():
+        stream = MEDIA / upload_id / "index.m3u8" if upload_id else None
+        if stream and stream.exists():
             video = soup.new_tag("video", controls="", preload="none", playsinline="")
-            video["src"] = f"/media/{upload_id}.mp4"
+            video["data-hls"] = f"/media/{upload_id}/index.m3u8"
             if (MEDIA / f"{upload_id}.jpg").exists():
                 video["poster"] = f"/media/{upload_id}.jpg"
             if (MEDIA / f"{upload_id}.vtt").exists():
@@ -146,28 +149,30 @@ def clean(body_html, known_slugs):
                 video.append(track)
             video.append("Your browser cannot play this video.")
             el.replace_with(video)
-            transcript = MEDIA / f"{upload_id}.txt"
-            if transcript.exists():
-                details = soup.new_tag("details")
-                details["class"] = "transcript"
-                summary = soup.new_tag("summary")
-                summary.string = "Read the transcript"
-                details.append(summary)
-                label = soup.new_tag("p")
-                label["class"] = "note"
-                label.string = "Transcribed by machine from the video. Where a word matters, the video is the record."
-                details.append(label)
-                for para in transcript.read_text(encoding="utf-8").split("\n\n"):
-                    if para.strip():
-                        tp = soup.new_tag("p")
-                        tp.string = para.strip()
-                        details.append(tp)
-                video.insert_after(details)
+            anchor = video
         else:
             note = soup.new_tag("p")
             note["class"] = "note"
             note.string = VIDEO_NOTE
             el.replace_with(note)
+            anchor = note
+        transcript = MEDIA / f"{upload_id}.txt" if upload_id else None
+        if transcript and transcript.exists():
+            details = soup.new_tag("details")
+            details["class"] = "transcript"
+            summary = soup.new_tag("summary")
+            summary.string = "Read the transcript"
+            details.append(summary)
+            label = soup.new_tag("p")
+            label["class"] = "note"
+            label.string = "Transcribed by machine from the video. Where a word matters, the video is the record."
+            details.append(label)
+            for para in transcript.read_text(encoding="utf-8").split("\n\n"):
+                if para.strip():
+                    tp = soup.new_tag("p")
+                    tp.string = para.strip()
+                    details.append(tp)
+            anchor.insert_after(details)
 
     # Images: unwrap the lightbox link, flatten <picture>, keep one local copy.
     for a in soup.select("a.image-link"):
@@ -364,6 +369,16 @@ def render_post(p, prev_p, next_p):
     if prev_p:
         nav.append(f'<a class="older" href="/{esc(prev_p["slug"])}/"><span>Older</span>{esc(prev_p["title"])}</a>')
     minutes = max(1, round(words(p["body"]) / 230))
+    player = ""
+    if "data-hls=" in p["body"]:
+        player = """<script src="/hls.light.min.js"></script>
+<script>
+document.querySelectorAll("video[data-hls]").forEach(function (v) {
+  var src = v.getAttribute("data-hls");
+  if (v.canPlayType("application/vnd.apple.mpegurl")) { v.src = src; }
+  else if (window.Hls && Hls.isSupported()) { var h = new Hls(); h.loadSource(src); h.attachMedia(v); }
+});
+</script>"""
     inner = f"""<main class="wrap">
   <nav class="top"><a href="/">{SITE_TITLE}</a></nav>
   <article>
@@ -378,7 +393,8 @@ def render_post(p, prev_p, next_p):
   </article>
   <nav class="pager">{''.join(nav)}</nav>
   <footer class="foot"><p><a href="/">All pieces</a></p></footer>
-</main>"""
+</main>
+{player}"""
     return page(f"{p['title']} | {SITE_TITLE}", p["subtitle"] or p["title"], inner, f"/{p['slug']}/")
 
 
