@@ -1,0 +1,81 @@
+:root {
+  --paper: #f6f1e7;
+  --ink: #1f1b16;
+  --muted: #6b6257;
+  --rule: #d9cfbf;
+  --accent: #7a3b1d;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #17140f;
+    --ink: #e9e1d3;
+    --muted: #a39887;
+    --rule: #3a332a;
+    --accent: #d99a6c;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 20px;
+  line-height: 1.65;
+}
+.wrap { max-width: 36rem; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+a { color: var(--accent); text-underline-offset: 0.15em; text-decoration-thickness: 1px; }
+
+/* front page */
+.masthead { margin-bottom: 2.5rem; }
+.kicker {
+  font-family: var(--sans); font-size: 0.7rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 0.6rem;
+}
+.masthead h1 { font-size: 2.8rem; line-height: 1.05; margin: 0 0 0.75rem; font-weight: 600; letter-spacing: -0.01em; }
+.tagline { color: var(--muted); margin: 0; font-style: italic; }
+.pieces { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.pieces li { border-bottom: 1px solid var(--rule); }
+.pieces a { display: block; padding: 1.25rem 0; color: inherit; text-decoration: none; }
+.pieces .t { display: block; font-size: 1.3rem; font-weight: 600; line-height: 1.25; }
+.pieces a:hover .t { color: var(--accent); }
+.pieces .s { display: block; color: var(--muted); margin-top: 0.3rem; line-height: 1.4; }
+.pieces time { display: block; font-family: var(--sans); font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; letter-spacing: 0.04em; }
+
+/* piece */
+.top { font-family: var(--sans); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2.5rem; }
+.top a { color: var(--muted); text-decoration: none; }
+.piece-head h1 { font-size: 2.3rem; line-height: 1.12; margin: 0 0 0.75rem; font-weight: 600; letter-spacing: -0.01em; }
+.piece-head .sub { font-size: 1.2rem; color: var(--muted); font-style: italic; margin: 0 0 1rem; line-height: 1.4; }
+.piece-head .meta { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0 0 2.5rem; }
+.body img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 2px; }
+.body figure { margin: 2rem 0; }
+.body figcaption { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 0.6rem; line-height: 1.5; }
+.body hr { border: 0; text-align: center; margin: 2.5rem 0; }
+.body hr::after { content: "\2217 \2217 \2217"; color: var(--muted); letter-spacing: 0.6em; }
+.body blockquote { margin: 1.5rem 0; padding-left: 1.1rem; border-left: 2px solid var(--rule); color: var(--muted); font-style: italic; }
+.body h2, .body h3 { line-height: 1.25; margin: 2.2rem 0 0.8rem; }
+.body ul, .body ol { padding-left: 1.3rem; }
+.body .note { font-family: var(--sans); font-size: 0.85rem; color: var(--muted); border: 1px solid var(--rule); padding: 0.75rem 1rem; border-radius: 4px; }
+.body .footnote { font-size: 0.85rem; color: var(--muted); }
+.body pre, .body code { font-size: 0.85em; white-space: pre-wrap; word-break: break-word; }
+
+.pager { display: grid; gap: 1rem; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
+.pager a { text-decoration: none; color: inherit; font-weight: 600; line-height: 1.3; }
+.pager a span { display: block; font-family: var(--sans); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 400; margin-bottom: 0.2rem; }
+.pager a:hover { color: var(--accent); }
+.foot { margin-top: 3rem; font-family: var(--sans); font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+.foot a { color: var(--muted); }
+
+@media (max-width: 600px) {
+  body { font-size: 18px; }
+  .wrap { padding: 2rem 1rem 3rem; }
+  .masthead h1 { font-size: 2.3rem; }
+  .piece-head h1 { font-size: 1.9rem; }
+}
+.body .footnote-anchor { vertical-align: super; font-size: 0.65em; text-decoration: none; padding: 0 0.1em; }
+.body .footnote { display: flex; gap: 0.6rem; }
+.body .footnote p { margin: 0 0 0.5rem; }
