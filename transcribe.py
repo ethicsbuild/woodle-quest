@@ -5,7 +5,10 @@ For each media/<id>.mp4 without a transcript, writes:
   media/<id>.txt  the same words as paragraphs, one per blank-line block
 """
 
+import subprocess
 from pathlib import Path
+
+import numpy as np
 
 from faster_whisper import WhisperModel
 
@@ -28,7 +31,13 @@ def main():
     model = WhisperModel("medium.en", device="cpu", compute_type="int8")
     for video in todo:
         print(f"Transcribing {video.name}")
-        segments, _ = model.transcribe(str(video), beam_size=5, vad_filter=True,
+        # Decode with ffmpeg ourselves (16 kHz mono) rather than faster-whisper's
+        # bundled decoder, which breaks when its PyAV dependency moves.
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-f", "f32le",
+                              "-ac", "1", "-ar", "16000", "-"], check=True,
+                             capture_output=True).stdout
+        audio = np.frombuffer(raw, dtype=np.float32)
+        segments, _ = model.transcribe(audio, beam_size=5, vad_filter=True,
                                        condition_on_previous_text=False)
         segments = [s for s in segments if s.text.strip()]
 
