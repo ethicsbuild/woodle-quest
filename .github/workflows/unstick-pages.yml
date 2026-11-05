@@ -15,17 +15,34 @@ on:
 permissions:
   pages: write
   actions: write
+  contents: write
+  deployments: write
 
 jobs:
   cancel:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Cancel the stuck deployment and republish
         env:
           GH_TOKEN: ${{ github.token }}
           SHA: ${{ inputs.sha || 'be039a9a7a1fafc5add873176d35dfdb3960cd4e' }}
         run: |
-          gh api "repos/${{ github.repository }}/pages/deployments/$SHA" || true
-          gh api -X POST "repos/${{ github.repository }}/pages/deployments/$SHA/cancel" && echo "cancelled $SHA" || echo "cancel call failed"
-          sleep 20
+          R="repos/${{ github.repository }}"
+          {
+            echo "== status by sha"; gh api "$R/pages/deployments/$SHA" 2>&1
+            echo "== cancel by sha"; gh api -X POST "$R/pages/deployments/$SHA/cancel" 2>&1
+            echo "== environment deployments"
+            gh api "$R/deployments?environment=github-pages&per_page=10" --jq '.[] | "\(.id) \(.sha) \(.created_at)"' 2>&1
+            for id in $(gh api "$R/deployments?environment=github-pages&sha=$SHA" --jq '.[].id' 2>/dev/null); do
+              echo "== statuses for $id"; gh api "$R/deployments/$id/statuses" --jq '.[] | "\(.state) \(.created_at) \(.description)"' 2>&1
+              echo "== cancel numeric $id"; gh api -X POST "$R/pages/deployments/$id/cancel" 2>&1
+              echo "== mark inactive $id"; gh api -X POST "$R/deployments/$id/statuses" -f state=inactive 2>&1 | head -c 300
+            done
+            echo "== status after"; gh api "$R/pages/deployments/$SHA" 2>&1
+          } | tee unstick-log.txt
+          git config user.name "reading-room-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add unstick-log.txt && git commit -qm "Unstick log" && git pull -q --rebase origin main && git push -q
+          sleep 15
           gh workflow run build.yml --ref main --repo "${{ github.repository }}"
