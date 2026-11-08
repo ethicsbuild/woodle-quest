@@ -356,7 +356,7 @@ def render_index(posts):
   </ol>
   <footer class="foot">
     <p>Human for the seeing, the seeding and the conducting. Lumen for the research and words.</p>
-    <p>The process behind each piece is public: <a href="https://ethicsbuild.github.io/Receipts/published/" rel="noopener">the receipts</a>.</p>
+    <p>The process behind each piece is public: <a href="https://ethicsbuild.github.io/Receipts/" rel="noopener">the receipts</a>.</p>
   </footer>
 </main>"""
     return page(f"{SITE_TITLE} | {AUTHOR}", TAGLINE, inner, "/")
