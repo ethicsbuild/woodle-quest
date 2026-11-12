@@ -1,4 +1,3 @@
 FEED UNREACHABLE: HTTP Error 403: Forbidden
 Using saved copy: feed.xml
-  updated: Privacy Is a Fantasy
 Built 11 pieces into /home/runner/work/woodle-quest/woodle-quest/site
