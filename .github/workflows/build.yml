@@ -19,9 +19,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+    outputs:
+      publish: ${{ steps.keep.outputs.publish }}
     steps:
       - uses: actions/checkout@v5
 
@@ -69,8 +68,17 @@ jobs:
         with:
           path: site
 
+  # Publishing runs in its own job, as GitHub recommends for deploy-pages:
+  # in the same job it stopped finding the uploaded site (Nov 24, 2026).
+  deploy:
+    needs: build
+    if: needs.build.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
-        if: steps.build.outcome == 'success' && steps.keep.outputs.publish == 'true'
         uses: actions/deploy-pages@v5
         with:
           timeout: 600000
